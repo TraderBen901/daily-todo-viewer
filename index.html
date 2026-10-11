@@ -4,348 +4,1689 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="referrer" content="no-referrer" />
-    <title>To-do quotidienne</title>
+    <meta name="color-scheme" content="light dark" />
+    <title>Guichet du matin</title>
     <style>
+      /* ——— Le guichet du matin : billets, poinçon, dateur, éphéméride, ticket de caisse ——— */
+      @property --hole {
+        syntax: "<length>";
+        inherits: true;
+        initial-value: -1px;
+      }
       :root {
-        --ink: #17202a;
-        --muted: #687481;
-        --paper: #f5f2eb;
-        --card: #fff;
-        --work: #146c5a;
-        --private: #8d4f7d;
-        --line: #ded9ce;
-        --amber: #b56b16;
+        --f: Bahnschrift, "DIN Alternate", "Roboto Condensed", "Segoe UI", system-ui, sans-serif;
+        --mono: "Cascadia Mono", Consolas, ui-monospace, Menlo, monospace;
+        --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .10 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        /* zinc du comptoir */
+        --zinc-hi: #d3d8dc;
+        --zinc: #bec5cb;
+        --zinc-lo: #aab2b9;
+        --engrave: #2b333b;
+        --engrave-hi: rgba(255, 255, 255, 0.5);
+        /* billets */
+        --work: #cfe2eb;
+        --work-stub: #b5d2df;
+        --work-ink: #0e2433;
+        --work-enamel: #1f4e7f;
+        --priv: #f2d4d9;
+        --priv-stub: #e7bac3;
+        --priv-ink: #3a111c;
+        --priv-enamel: #8e2840;
+        --perf: rgba(0, 0, 0, 0.32);
+        /* papiers */
+        --sheet: #fdfdfa;
+        --sheet-ink: #15171a;
+        --receipt: #fbfbf7;
+        --receipt-ink: #1d1e1f;
+        --card: #fffef9;
+        /* encres */
+        --violet: #5b35b0;
+        --red: #c41a22;
+        --blue: #1b4ea6;
+        --focus: #0a58ff;
+        /* objets */
+        --board: #1f3d63;
+        --wood-a: #a8764a;
+        --wood-b: #8f5f38;
+        --brass-a: #e6cd84;
+        --brass-b: #a98432;
+        --machine-hi: #4a5058;
+        --machine-lo: #2c3036;
+        --shadow: rgba(20, 26, 32, 0.28);
+        --shadow-soft: rgba(20, 26, 32, 0.13);
+        --ink-blend: multiply;
+        --pince: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg stroke-linecap='round' fill='none'%3E%3Cpath d='M11 9l17 9M9 11l9 17' stroke='%23fff' stroke-width='6'/%3E%3Cpath d='M11 9l17 9M9 11l9 17' stroke='%23222' stroke-width='3.4'/%3E%3C/g%3E%3Ccircle cx='7' cy='7' r='5.2' fill='%23fff' stroke='%23222' stroke-width='2'/%3E%3Ccircle cx='7' cy='7' r='1.6' fill='%23222'/%3E%3C/svg%3E") 7 7, pointer;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --zinc-hi: #2a3036;
+          --zinc: #22272c;
+          --zinc-lo: #1b1f23;
+          --engrave: #c3cbd2;
+          --engrave-hi: rgba(0, 0, 0, 0.6);
+          --work: #a6bdc8;
+          --work-stub: #92adba;
+          --work-ink: #0a1822;
+          --work-enamel: #2b5b8e;
+          --priv: #c6a3aa;
+          --priv-stub: #b78f97;
+          --priv-ink: #22090f;
+          --priv-enamel: #94324a;
+          --perf: rgba(0, 0, 0, 0.4);
+          --sheet: #cfcdc6;
+          --sheet-ink: #101113;
+          --receipt: #cac9c2;
+          --receipt-ink: #111;
+          --card: #d2d0c7;
+          --violet: #4a2496;
+          --red: #a8121a;
+          --blue: #123f8f;
+          --focus: #7fb0ff;
+          --board: #182c45;
+          --wood-a: #6e4a2c;
+          --wood-b: #5a3b22;
+          --brass-a: #c9b06a;
+          --brass-b: #806224;
+          --machine-hi: #3c4249;
+          --machine-lo: #1e2125;
+          --shadow: rgba(0, 0, 0, 0.55);
+          --shadow-soft: rgba(0, 0, 0, 0.35);
+        }
       }
       * {
         box-sizing: border-box;
       }
+      html {
+        background: var(--zinc);
+      }
       body {
         margin: 0;
-        background: var(--paper);
-        color: var(--ink);
-        font:
-          15px/1.45 system-ui,
-          -apple-system,
-          "Segoe UI",
-          sans-serif;
+        min-height: 100vh;
+        color: var(--engrave);
+        font: 15px/1.45 var(--f);
+        background-color: var(--zinc);
+        background-image:
+          var(--grain),
+          repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.06) 0 1px, rgba(0, 0, 0, 0.03) 1px 2px, transparent 2px 4px),
+          linear-gradient(165deg, var(--zinc-hi), var(--zinc) 45%, var(--zinc-lo));
+        background-attachment: fixed;
       }
-      .shell {
-        max-width: 1120px;
-        margin: auto;
-        padding: 28px 22px 60px;
+      button,
+      input {
+        font: inherit;
+        color: inherit;
       }
-      header {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 20px;
-        align-items: end;
-        margin-bottom: 20px;
+      :focus-visible {
+        outline: 3px solid var(--focus);
+        outline-offset: 2px;
       }
-      .eyebrow {
-        text-transform: uppercase;
-        letter-spacing: 0.14em;
-        color: var(--muted);
-        font-size: 12px;
-        font-weight: 700;
-      }
-      h1 {
-        font:
-          700 clamp(31px, 5vw, 55px)/1.02 Georgia,
-          serif;
-        margin: 5px 0;
-      }
-      .date,
-      .meta,
-      footer,
-      .aside {
-        color: var(--muted);
-      }
-      .progress-wrap {
-        min-width: 220px;
-        text-align: right;
-      }
-      .progress {
-        height: 9px;
-        background: #ddd7cb;
-        border-radius: 99px;
+      .vh {
+        position: absolute;
+        width: 1px;
+        height: 1px;
         overflow: hidden;
-        margin-top: 7px;
-      }
-      .progress i {
-        display: block;
-        height: 100%;
-        width: 0;
-        background: var(--work);
-        transition: 0.25s;
-      }
-      .agenda {
-        background: #17202a;
-        color: white;
-        border-radius: 18px;
-        padding: 18px 22px;
-        margin: 18px 0;
-      }
-      .agenda h2 {
-        margin: 0 0 9px;
-        font-size: 14px;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-      }
-      .agenda ul {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px 22px;
-        list-style: none;
-        padding: 0;
-        margin: 0;
-      }
-      .agenda time {
-        font-weight: 800;
-        color: #9fe1d1;
-        margin-right: 7px;
-      }
-      .tabs {
-        display: flex;
-        gap: 8px;
-        border-bottom: 1px solid var(--line);
-        margin-top: 22px;
-        overflow-x: auto;
-      }
-      .tab {
-        border: 0;
-        background: transparent;
-        padding: 13px 20px;
-        font-weight: 800;
-        color: var(--muted);
-        cursor: pointer;
-        border-bottom: 3px solid transparent;
+        clip: rect(0 0 0 0);
         white-space: nowrap;
       }
-      .tab.active[data-tab="work"] {
-        color: var(--work);
-        border-color: var(--work);
+      .defs {
+        position: absolute;
+        width: 0;
+        height: 0;
       }
-      .tab.active[data-tab="private"] {
-        color: var(--private);
-        border-color: var(--private);
+
+      /* ——— plan du comptoir ——— */
+      .desk {
+        max-width: 1384px;
+        margin: 0 auto;
+        padding: 26px 28px 30px;
+        display: grid;
+        grid-template-columns: 292px minmax(0, 1fr) 300px;
+        grid-template-areas:
+          "eph main rcpt"
+          "disp main rcpt"
+          "drw main rcpt";
+        grid-template-rows: auto auto 1fr;
+        gap: 22px 34px;
+        align-items: start;
       }
-      .tab.active[data-tab="expenses"] {
-        color: var(--amber);
-        border-color: var(--amber);
+      .eph {
+        grid-area: eph;
       }
-      .panel {
+      .main {
+        grid-area: main;
+        min-width: 0;
+      }
+      .rcpt {
+        grid-area: rcpt;
+      }
+      .disp {
+        grid-area: disp;
+      }
+      .drw {
+        grid-area: drw;
+      }
+
+      /* ——— éphéméride ——— */
+      .board {
+        position: relative;
+        background:
+          var(--grain),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.12)),
+          var(--board);
+        border-radius: 7px 7px 4px 4px;
+        padding: 30px 12px 12px;
+        box-shadow:
+          0 1px 0 rgba(255, 255, 255, 0.15) inset,
+          0 2px 0 var(--shadow),
+          0 10px 22px var(--shadow-soft);
+      }
+      .board::before {
+        content: "";
+        position: absolute;
+        top: 9px;
+        left: 50%;
+        width: 13px;
+        height: 13px;
+        margin-left: -6.5px;
+        border-radius: 50%;
+        background: var(--zinc-lo);
+        box-shadow:
+          inset 0 2px 3px rgba(0, 0, 0, 0.55),
+          0 1px 0 rgba(255, 255, 255, 0.2);
+      }
+      .board-label {
+        position: absolute;
+        top: 10px;
+        left: 14px;
+        right: 14px;
+        display: flex;
+        justify-content: space-between;
+        color: rgba(255, 255, 255, 0.72);
+        font: 600 10.5px/1 var(--f);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+      .pad {
+        position: relative;
+      }
+      .glue {
+        height: 9px;
+        background: linear-gradient(180deg, #3a3a38, #555) top / 100% 4px no-repeat, var(--sheet);
+        -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 0 0 / 7px 100%;
+        mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 0 0 / 7px 100%;
+        opacity: 0.95;
+      }
+      .sheet {
+        position: relative;
+        background: var(--grain), var(--sheet);
+        color: var(--sheet-ink);
+        padding: 12px 16px 14px;
+        margin-top: -1px;
+      }
+      .stackedge {
+        height: 9px;
+        background: repeating-linear-gradient(180deg, var(--sheet) 0 1px, rgba(0, 0, 0, 0.22) 1px 1.6px);
+        filter: brightness(0.94);
+        box-shadow: 0 2px 2px rgba(0, 0, 0, 0.25);
+      }
+      .s-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        font: 700 13px/1 var(--f);
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        border-bottom: 2px solid currentColor;
+        padding-bottom: 7px;
+      }
+      .s-head small {
+        font: 500 11px/1 var(--mono);
+        letter-spacing: 0.04em;
+      }
+      .s-date {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 2px 14px;
+        align-items: center;
+        padding: 6px 0 10px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.18);
+      }
+      .s-num {
+        font: 700 108px/0.86 var(--f);
+        font-variation-settings: "wdth" 75, "wght" 700;
+        letter-spacing: -0.03em;
+        margin: 4px 0 0 -3px;
+      }
+      .sunday .s-num {
+        color: var(--red);
+      }
+      .s-day {
+        font: 700 21px/1 var(--f);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      .s-yday {
+        font: 12px/1.35 var(--mono);
+        opacity: 0.8;
+        margin-top: 6px;
+      }
+      .s-block {
+        padding: 9px 0 2px;
+      }
+      .s-block + .s-block {
+        border-top: 1px dotted rgba(0, 0, 0, 0.35);
+        margin-top: 8px;
+      }
+      .s-h {
+        font: 700 10.5px/1 var(--f);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        opacity: 0.7;
+        margin: 0 0 7px;
+      }
+      .rdv {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .rdv li {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 2px 10px;
+        margin: 0 0 6px;
+      }
+      .rdv time {
+        font: 700 16px/1.2 var(--f);
+        white-space: nowrap;
+      }
+      .rdv b {
+        font: 600 15px/1.25 var(--f);
+      }
+      .rdv small {
+        display: block;
+        font-size: 12px;
+        line-height: 1.35;
+        opacity: 0.68;
+        margin-top: 2px;
+      }
+      .ech {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .ech li {
+        margin: 0 0 3px;
+      }
+      .ech button {
+        display: block;
+        width: 100%;
+        text-align: left;
+        border: 0;
+        background: none;
+        padding: 2px 0 2px 16px;
+        position: relative;
+        font: 500 14px/1.3 var(--f);
+        cursor: pointer;
+        color: var(--sheet-ink);
+      }
+      .ech button::before {
+        content: "";
+        position: absolute;
+        left: 1px;
+        top: 7px;
+        width: 8px;
+        height: 8px;
+        border: 1.5px solid currentColor;
+        border-radius: 50%;
+      }
+      .ech button.ok {
+        text-decoration: line-through;
+        opacity: 0.5;
+      }
+      .ech button.ok::before {
+        background: currentColor;
+      }
+      .ech button:hover {
+        text-decoration: underline;
+      }
+      .muted {
+        font-size: 13px;
+        opacity: 0.65;
+        margin: 0;
+      }
+      .pointage {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .holes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        flex: 1;
+      }
+      .holes i {
+        cursor: pointer;
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        border: 1.5px dashed rgba(0, 0, 0, 0.5);
+      }
+      .holes i.p {
+        border: 0;
+        background: var(--zinc-lo);
+        box-shadow:
+          inset 0 2px 3px rgba(0, 0, 0, 0.55),
+          0 0 0 1.5px rgba(0, 0, 0, 0.15);
+      }
+      .holes i.r {
+        border-color: var(--violet);
+        border-style: solid;
+        background: repeating-linear-gradient(45deg, transparent 0 2px, color-mix(in srgb, var(--violet) 55%, transparent) 2px 3.4px);
+      }
+      .counter {
+        font: 700 30px/1 var(--f);
+        font-variation-settings: "wdth" 80, "wght" 700;
+        white-space: nowrap;
+        display: flex;
+        align-items: baseline;
+        gap: 2px;
+      }
+      .counter .n {
+        display: inline-block;
+      }
+      .counter .n.tick {
+        animation: tick 0.22s ease-out;
+      }
+      @keyframes tick {
+        from {
+          transform: translateY(-45%);
+          opacity: 0.2;
+        }
+      }
+      .counter small {
+        font-size: 16px;
+        opacity: 0.6;
+      }
+      .reste {
+        font: 12.5px/1.4 var(--mono);
+        margin: 7px 0 0;
+        opacity: 0.85;
+      }
+      .reste .bl {
+        color: var(--blue);
+        font-weight: 700;
+      }
+      .solde {
+        position: absolute;
+        right: 62px;
+        bottom: 30px;
+        color: var(--red);
+        border: 3px double var(--red);
+        font: 700 17px/1.05 var(--f);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        text-align: center;
+        padding: 6px 9px;
+        transform: rotate(-11deg) scale(1.4);
+        opacity: 0;
+        mix-blend-mode: var(--ink-blend);
+        filter: url(#encre);
+        pointer-events: none;
+        transition:
+          opacity 0.14s,
+          transform 0.2s cubic-bezier(0.2, 1.5, 0.4, 1);
+      }
+      .sheet.all .solde {
+        opacity: 0.88;
+        transform: rotate(-11deg) scale(1);
+      }
+      .only-small {
         display: none;
       }
-      .panel.active {
-        display: block;
+      .mini-dep {
+        margin-top: 8px;
+        padding-top: 7px;
+        border-top: 1px dotted rgba(0, 0, 0, 0.35);
+        font: 600 13px/1.35 var(--f);
+        color: var(--sheet-ink);
       }
-      section {
-        margin: 25px 0;
+      /* feuille d'hier arrachée (une fois par jour) */
+      .ghost {
+        position: absolute;
+        inset: 0;
+        background: var(--grain), var(--sheet);
+        color: var(--sheet-ink);
+        padding: 12px 16px;
+        transform-origin: 100% 0;
+        animation: arrache 0.72s cubic-bezier(0.5, 0, 0.75, 0.4) 0.35s forwards;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+        z-index: 3;
+        pointer-events: none;
       }
-      section > h2,
-      .aside h2 {
-        font:
-          700 21px Georgia,
-          serif;
-        margin: 0 0 12px;
+      .ghost .s-date {
+        border: 0;
+      }
+      @keyframes arrache {
+        0% {
+          transform: none;
+        }
+        16% {
+          transform: rotate(-2.5deg) translate(-3px, 4px);
+        }
+        62% {
+          opacity: 1;
+        }
+        100% {
+          transform: translate(-110px, -230px) rotate(-38deg);
+          opacity: 0;
+        }
+      }
+
+      /* ——— distributeur de billets (ajout) ——— */
+      .machine {
+        position: relative;
+        border-radius: 9px;
+        padding: 26px 10px 10px;
+        background:
+          var(--grain),
+          linear-gradient(180deg, var(--machine-hi), var(--machine-lo));
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.16),
+          0 2px 0 var(--shadow),
+          0 10px 20px var(--shadow-soft);
+        color: #e9edf1;
+      }
+      .machine-label {
+        position: absolute;
+        top: 8px;
+        left: 12px;
+        right: 12px;
+        display: flex;
+        justify-content: space-between;
+        font: 600 10.5px/1 var(--f);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.7);
+      }
+      .machine-label kbd {
+        font: 600 10px/1 var(--mono);
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        border-radius: 3px;
+        padding: 1px 4px;
+      }
+      .rolls {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 8px;
+      }
+      .rolls button {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        border: 0;
+        border-radius: 5px;
+        padding: 6px 8px;
+        background: rgba(255, 255, 255, 0.07);
+        color: rgba(255, 255, 255, 0.75);
+        font: 600 12.5px/1 var(--f);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        cursor: pointer;
+      }
+      .rolls button i {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: radial-gradient(circle, var(--machine-lo) 0 3px, var(--c) 3.5px);
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+      }
+      .rolls button[aria-pressed="true"] {
+        background: rgba(255, 255, 255, 0.18);
+        color: #fff;
+        box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.55);
+      }
+      .slot {
+        display: flex;
+        gap: 6px;
+        align-items: stretch;
+        background: #15181b;
+        border-radius: 5px;
+        padding: 5px;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.7);
+      }
+      .slot {
+        overflow: hidden;
+      }
+      .slot input.avance {
+        animation: avance 0.26s cubic-bezier(0.2, 0.9, 0.3, 1.1);
+      }
+      @keyframes avance {
+        from {
+          transform: translateY(-115%);
+        }
+      }
+      .slot input {
+        flex: 1;
+        min-width: 0;
+        border: 0;
+        border-radius: 2px;
+        padding: 9px 10px;
+        background: var(--work);
+        color: var(--work-ink);
+        font: 500 15px/1.2 var(--f);
+      }
+      .slot.private input {
+        background: var(--priv);
+        color: var(--priv-ink);
+      }
+      .slot input::placeholder {
+        color: inherit;
+        opacity: 0.55;
+      }
+      .slot button {
+        border: 0;
+        border-radius: 4px;
+        padding: 0 12px;
+        font: 700 12.5px/1 var(--f);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        cursor: pointer;
+        color: #1b1e21;
+        background: linear-gradient(180deg, #f1f3f4, #b9bec3);
+        box-shadow:
+          0 2px 0 #6e747a,
+          inset 0 1px 0 #fff;
+      }
+      .slot button:active {
+        transform: translateY(2px);
+        box-shadow:
+          0 0 0 #6e747a,
+          inset 0 1px 0 #fff;
+      }
+
+      /* ——— colonne des billets ——— */
+      .avis {
+        position: relative;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 12px;
+        align-items: center;
+        background: var(--grain), #f3e58e;
+        color: #2a2305;
+        padding: 10px 14px 10px 27px;
+        margin: 0 0 22px;
+        box-shadow:
+          0 1px 0 var(--shadow),
+          0 5px 10px var(--shadow-soft);
+        transform: rotate(-0.4deg);
+      }
+      @media (prefers-color-scheme: dark) {
+        .avis {
+          background: var(--grain), #bfb36a;
+        }
+      }
+      .avis::before {
+        content: "";
+        position: absolute;
+        left: 7px;
+        top: -9px;
+        width: 11px;
+        height: 30px;
+        border: 2px solid #8e959c;
+        border-radius: 6px;
+        box-shadow: inset 0 0 0 2px transparent;
+        background: linear-gradient(90deg, transparent 0 3px, #8e959c 3px 5px, transparent 5px) 0 4px / 100% 18px no-repeat;
+        transform: rotate(8deg);
+        filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.3));
+      }
+      .avis .tampon {
+        color: var(--red);
+        border: 2px solid var(--red);
+        font: 700 13px/1 var(--f);
+        letter-spacing: 0.16em;
+        padding: 4px 6px 3px;
+        transform: rotate(-7deg);
+        mix-blend-mode: var(--ink-blend);
+        filter: url(#encre);
+      }
+      .avis {
+        width: 100%;
+        border: 0;
+        text-align: left;
+        cursor: pointer;
+        font: inherit;
+      }
+      .avis .txt {
+        margin: 0;
+        font: 500 14px/1.38 var(--f);
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .avis .voir {
+        font: 600 12.5px/1 var(--f);
+        white-space: nowrap;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+      .avis:hover .voir {
+        text-decoration-thickness: 2px;
+      }
+      .area {
+        margin: 0 0 30px;
+      }
+      .area-head {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin: 0 0 6px;
+      }
+      .dymo {
+        display: inline-block;
+        margin: 0;
+        padding: 6px 13px 5px 15px;
+        font: 700 16px/1 var(--f);
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: #f4f7fa;
+        text-shadow:
+          0 -1px 0 rgba(0, 0, 0, 0.45),
+          0 1px 0 rgba(255, 255, 255, 0.35);
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 40%, rgba(0, 0, 0, 0.18)),
+          var(--tape);
+        clip-path: polygon(0 0, 100% 0, calc(100% - 4px) 50%, 100% 100%, 0 100%, 4px 50%);
+        transform: rotate(-0.8deg);
+        box-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+      }
+      #work .dymo {
+        --tape: var(--work-enamel);
+      }
+      #private .dymo {
+        --tape: var(--priv-enamel);
+      }
+      .area-sub {
+        font: 12.5px/1.2 var(--mono);
+        color: var(--engrave);
+        text-shadow: 0 1px 0 var(--engrave-hi);
+        opacity: 0.9;
+      }
+      .area-empty {
+        font: 14px/1.4 var(--f);
+        color: var(--engrave);
+        opacity: 0.8;
+        margin: 10px 0 0;
+        padding: 12px 14px;
+        border: 1.5px dashed color-mix(in srgb, var(--engrave) 40%, transparent);
+        border-radius: 4px;
+      }
+      section.sec {
+        margin: 12px 0 0;
+      }
+      section.sec[hidden] {
+        display: none;
+      }
+      .sec-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0 0 8px;
+        font: 700 11.5px/1 var(--f);
+        letter-spacing: 0.17em;
+        text-transform: uppercase;
+        color: var(--engrave);
+        text-shadow: 0 1px 0 var(--engrave-hi);
+      }
+      .sec-title::after {
+        content: "";
+        flex: 1;
+        height: 2px;
+        background: linear-gradient(180deg, color-mix(in srgb, var(--engrave) 30%, transparent) 0 1px, var(--engrave-hi) 1px);
       }
       .task-list {
         display: grid;
         gap: 10px;
       }
+      .task-list .empty {
+        display: none;
+      }
+
+      /* ——— le billet ——— */
       .task {
+        --sw: 76px;
+        --n: 7px;
+        position: relative;
+        filter: drop-shadow(0 1px 0 var(--shadow)) drop-shadow(0 4px 5px var(--shadow-soft));
+        color: var(--tink);
+      }
+      .task[data-area="work"] {
+        --stock: var(--work);
+        --stub: var(--work-stub);
+        --tink: var(--work-ink);
+      }
+      .task[data-area="private"] {
+        --stock: var(--priv);
+        --stub: var(--priv-stub);
+        --tink: var(--priv-ink);
+      }
+      .task.big {
+        --sw: 88px;
+      }
+      .ticket {
+        position: relative;
         display: grid;
-        grid-template-columns: 34px 1fr auto;
-        gap: 10px;
-        align-items: start;
-        background: var(--card);
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        padding: 15px;
-        box-shadow: 0 3px 12px #17202a0a;
+        grid-template-columns: var(--sw) minmax(0, 1fr);
+        min-height: 94px;
       }
-      .task.high {
-        border-left: 5px solid var(--amber);
-      }
-      .check input {
+      .ticket::before {
+        content: "";
         position: absolute;
-        opacity: 0;
-      }
-      .check span {
-        display: block;
-        width: 22px;
-        height: 22px;
-        border: 2px solid #a9aca7;
-        border-radius: 7px;
-        cursor: pointer;
-      }
-      .check input:checked + span {
-        background: var(--work);
-        border-color: var(--work);
-        box-shadow: inset 0 0 0 4px white;
+        inset: 0;
+        z-index: -1;
+        background:
+          var(--grain),
+          linear-gradient(90deg, var(--stub) 0 var(--sw), var(--stock) var(--sw));
+        -webkit-mask:
+          radial-gradient(circle at var(--sw) 0, #0000 var(--n), #000 calc(var(--n) + 0.5px)),
+          radial-gradient(circle at var(--sw) 100%, #0000 var(--n), #000 calc(var(--n) + 0.5px)),
+          radial-gradient(circle at calc(var(--sw) / 2) 50%, #0000 var(--hole), #000 calc(var(--hole) + 0.6px));
+        -webkit-mask-composite: source-in, source-in;
+        mask:
+          radial-gradient(circle at var(--sw) 0, #0000 var(--n), #000 calc(var(--n) + 0.5px)),
+          radial-gradient(circle at var(--sw) 100%, #0000 var(--n), #000 calc(var(--n) + 0.5px)),
+          radial-gradient(circle at calc(var(--sw) / 2) 50%, #0000 var(--hole), #000 calc(var(--hole) + 0.6px));
+        mask-composite: intersect;
+        transition: --hole 0.16s cubic-bezier(0.3, 1.8, 0.5, 1);
       }
       .task.done {
-        opacity: 0.52;
+        --hole: 10px;
+      }
+      .task.carried .ticket::before {
+        background:
+          linear-gradient(103deg, transparent 0 46%, rgba(0, 0, 0, 0.09) 49.6%, rgba(255, 255, 255, 0.32) 50.2%, transparent 54%),
+          linear-gradient(rgba(120, 104, 80, 0.13), rgba(120, 104, 80, 0.13)),
+          var(--grain),
+          linear-gradient(90deg, var(--stub) 0 var(--sw), var(--stock) var(--sw));
+      }
+      .task.carried .ticket {
+        transform: rotate(-0.35deg);
+      }
+      /* billet reporté : poussé de côté sur le comptoir */
+      .task .ticket {
+        transition: transform 0.25s cubic-bezier(0.3, 1.3, 0.5, 1);
+      }
+      .task.rolled .ticket {
+        transform: translateX(14px) rotate(0.5deg);
+      }
+      /* billet ajouté : imprimé par le distributeur, en caractères thermiques */
+      .task.manual h3 {
+        font: 600 15.5px/1.35 var(--mono);
+        letter-spacing: -0.01em;
+      }
+      @media (hover: hover) {
+        .task:not(.done):hover {
+          filter: drop-shadow(0 1px 0 var(--shadow)) drop-shadow(0 7px 9px var(--shadow-soft));
+        }
+      }
+      .ticket::after {
+        /* perforation */
+        content: "";
+        position: absolute;
+        left: calc(var(--sw) - 1px);
+        top: calc(var(--n) + 3px);
+        bottom: calc(var(--n) + 3px);
+        width: 2px;
+        background: repeating-linear-gradient(180deg, var(--perf) 0 2.5px, transparent 2.5px 6px);
+        pointer-events: none;
+      }
+      .stub {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+        padding: 9px 4px 9px;
+        cursor: var(--pince);
+        user-select: none;
+      }
+      .stub .no {
+        font: 600 11px/1 var(--mono);
+        letter-spacing: 0.02em;
+        opacity: 0.75;
+      }
+      .stub .dur {
+        font: 700 13px/1 var(--f);
+        letter-spacing: 0.02em;
+        white-space: nowrap;
+      }
+      .stub input {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        opacity: 0;
+        cursor: var(--pince);
+      }
+      .punch {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 30px;
+        height: 30px;
+        margin: -15px 0 0 -15px;
+        border-radius: 50%;
+        border: 1.5px dashed currentColor;
+        opacity: 0.6;
+        pointer-events: none;
+        transition: transform 0.12s;
+      }
+      .punch::before {
+        content: "fait";
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        font: 700 9.5px/1 var(--mono);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .punch::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 20px;
+        height: 20px;
+        margin: -10px 0 0 -10px;
+        border-radius: 50%;
+        opacity: 0;
+        box-shadow:
+          inset 0 3px 4px rgba(0, 0, 0, 0.55),
+          inset 0 -1px 0 rgba(255, 255, 255, 0.25);
+      }
+      .stub:hover .punch {
+        transform: scale(1.08);
+        opacity: 0.9;
+      }
+      .task.done .punch {
+        border-style: solid;
+        opacity: 1;
+        border-color: color-mix(in srgb, currentColor 30%, transparent);
+      }
+      .task.done .punch::before {
+        content: "";
+      }
+      .task.done .punch::after {
+        opacity: 1;
+      }
+      .stub input:focus-visible ~ .punch {
+        outline: 3px solid var(--focus);
+        outline-offset: 3px;
+        opacity: 1;
+      }
+      .task.done .stub .dur,
+      .task.done .stub .no {
+        opacity: 0.4;
+      }
+      .body {
+        padding: 10px 14px 10px 16px;
+        min-width: 0;
+      }
+      .kind {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 4px 9px;
+        font: 600 10.5px/1.2 var(--mono);
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+      }
+      .kind .k {
+        opacity: 0.72;
+      }
+      .kind .prio {
+        color: var(--red);
+        font-weight: 700;
+      }
+      .kind .tag {
+        border: 1.5px solid currentColor;
+        padding: 1px 5px 0;
+        border-radius: 2px;
+        transform: rotate(-1.5deg);
+        mix-blend-mode: var(--ink-blend);
+      }
+      .kind .tag.carry {
+        color: var(--blue);
+      }
+      .kind .tag.man {
+        color: var(--tink);
+        opacity: 0.8;
+      }
+      .task h3 {
+        margin: 5px 0 7px;
+        font: 600 17px/1.24 var(--f);
+        letter-spacing: 0.005em;
+        cursor: pointer;
+        text-wrap: pretty;
+      }
+      .task.big h3 {
+        font-size: 21px;
+        line-height: 1.18;
+        margin-top: 7px;
+      }
+      .task.big .body {
+        padding-top: 14px;
+      }
+      .task.big .body::before {
+        /* bande dorée à chaud des grands billets */
+        content: "";
+        position: absolute;
+        left: var(--sw);
+        right: 0;
+        top: 0;
+        height: 5px;
+        background: linear-gradient(90deg, #a98432, #f1dc93 35%, #b8933c 60%, #ecd488);
+        opacity: 0.9;
+      }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px 12px;
+      }
+      .valid {
+        font: 12.5px/1.3 var(--mono);
+        opacity: 0.85;
+      }
+      .valid.today {
+        font-weight: 700;
+        opacity: 1;
+      }
+      .btns {
+        display: flex;
+        gap: 6px;
+        margin-left: auto;
+      }
+      .tbtn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        border: 1px solid color-mix(in srgb, var(--tink) 35%, transparent);
+        background: color-mix(in srgb, #fff 32%, transparent);
+        border-radius: 3px;
+        padding: 5px 9px 4px;
+        font: 600 12.5px/1 var(--f);
+        letter-spacing: 0.04em;
+        cursor: pointer;
+        color: var(--tink);
+      }
+      .tbtn:hover {
+        background: color-mix(in srgb, #fff 55%, transparent);
+      }
+      .tbtn svg {
+        width: 15px;
+        height: 15px;
+        transition: transform 0.08s;
+      }
+      .roll:active svg {
+        transform: translateY(2.5px) scaleY(0.9);
+      }
+      .tbtn.whyb {
+        border-color: transparent;
+        background: none;
+        text-decoration: underline dotted 1.5px;
+        text-underline-offset: 3px;
+        padding-left: 4px;
+        padding-right: 4px;
+        opacity: 0.85;
+      }
+      .tbtn.whyb:hover {
+        opacity: 1;
+        background: none;
+      }
+      .roll.active {
+        color: var(--violet);
+        border-color: var(--violet);
+      }
+      .why {
+        margin: 9px 0 2px;
+        padding-top: 8px;
+        border-top: 1px dashed color-mix(in srgb, var(--tink) 35%, transparent);
+        font: 14px/1.45 var(--f);
+      }
+      .why p {
+        margin: 0 0 5px;
+      }
+      .why .src {
+        font: 11.5px/1.4 var(--mono);
+        opacity: 0.75;
       }
       .task.done h3 {
         text-decoration: line-through;
+        text-decoration-thickness: 1.5px;
       }
-      .task h3 {
-        font-size: 16px;
-        margin: 0 0 4px;
+      .task.done h3,
+      .task.rolled h3,
+      .task.done .valid,
+      .task.rolled .valid,
+      .task.done .whyb,
+      .task.rolled .whyb,
+      .task.done .why,
+      .task.rolled .why,
+      .task.done .kind > :not(.roll-mark),
+      .task.rolled .kind > :not(.roll-mark) {
+        opacity: 0.58;
       }
-      .task p {
-        margin: 0 0 6px;
-        color: #46515b;
+      /* empreintes de tampons */
+      .imprint {
+        position: absolute;
+        pointer-events: none;
+        mix-blend-mode: var(--ink-blend);
+        filter: url(#encre);
+        opacity: 0;
+        transition:
+          opacity 0.12s,
+          transform 0.18s cubic-bezier(0.2, 1.6, 0.4, 1);
       }
-      .meta {
-        font-size: 12px;
+      .roll-mark {
+        display: none;
+        align-items: baseline;
+        gap: 6px;
+        mix-blend-mode: var(--ink-blend);
+        filter: url(#encre);
+        color: var(--violet);
+        border: 2px solid currentColor;
+        outline: 1px solid currentColor;
+        outline-offset: 2px;
+        border-radius: 3px;
+        padding: 3px 7px 2px;
+        font: 700 13px/1.05 var(--f);
+        letter-spacing: 0.12em;
         text-transform: uppercase;
-        letter-spacing: 0.045em;
+        transform: rotate(-2.5deg);
+        margin: 1px 0 1px 2px;
       }
-      .roll {
-        border: 1px solid var(--line);
-        background: #faf8f3;
-        border-radius: 9px;
-        padding: 6px 9px;
-        color: var(--muted);
-        cursor: pointer;
+      .roll-mark small {
+        font: 600 10.5px/1.1 var(--mono);
+        letter-spacing: 0.04em;
       }
-      .roll.active {
-        background: #fff1d7;
-        border-color: #e2a24e;
-        color: #7d4a08;
+      .task.rolled .roll-mark {
+        display: inline-flex;
       }
-      .add-box {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 8px;
-        margin: 24px 0;
+      .task.just .roll-mark {
+        animation: tamponner 0.2s cubic-bezier(0.2, 1.4, 0.4, 1);
       }
-      .add-box input {
-        border: 1px solid var(--line);
-        border-radius: 11px;
-        padding: 12px;
-        background: white;
+      @keyframes tamponner {
+        from {
+          transform: rotate(-7deg) scale(1.7);
+          opacity: 0;
+        }
       }
-      .add-box button {
+      .done-mark {
+        left: 3px;
+        top: 50%;
+        color: var(--red);
+        font: 700 9.5px/1 var(--mono);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        white-space: nowrap;
+        transform: translate(-50%, -50%) rotate(-90deg) translateY(50%);
+        transform-origin: 50% 50%;
+        left: 7px;
+      }
+      .task.done .done-mark {
+        opacity: 0.9;
+      }
+      .confetti {
+        position: absolute;
+        left: calc(var(--sw) / 2 - 10px);
+        top: calc(50% - 10px);
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--stub);
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+        animation: chute 0.6s cubic-bezier(0.4, 0, 0.9, 0.6) forwards;
+        pointer-events: none;
+        z-index: 2;
+      }
+      @keyframes chute {
+        0% {
+          transform: none;
+        }
+        100% {
+          transform: translate(var(--dx, -14px), 90px) rotate(220deg) scaleX(0.35);
+          opacity: 0;
+        }
+      }
+      .ticket.thunk {
+        animation: thunk 0.16s ease-out;
+      }
+      @keyframes thunk {
+        40% {
+          transform: translateY(1.5px) scale(0.997);
+        }
+      }
+      .task.issued {
+        animation: sortie 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.15);
+      }
+      @keyframes sortie {
+        from {
+          transform: translateY(-16px) rotate(-1deg);
+          opacity: 0;
+          clip-path: inset(0 0 100% 0);
+        }
+        to {
+          clip-path: inset(0 0 0 0);
+        }
+      }
+      .task.flash .ticket {
+        animation: flash 0.7s ease-out;
+      }
+      @keyframes flash {
+        0%,
+        100% {
+          transform: none;
+        }
+        25% {
+          transform: translateX(-5px);
+        }
+        55% {
+          transform: translateX(4px);
+        }
+      }
+
+      /* ——— ticket de caisse ——— */
+      .receipt {
+        position: relative;
+        color: var(--receipt-ink);
+        font: 13px/1.45 var(--mono);
+        padding: 22px 18px 28px;
+        filter: drop-shadow(0 1px 0 var(--shadow)) drop-shadow(0 5px 7px var(--shadow-soft));
+        transform: rotate(0.5deg);
+      }
+      .receipt::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        background:
+          var(--grain),
+          linear-gradient(90deg, rgba(0, 0, 0, 0.035), transparent 8%, transparent 92%, rgba(0, 0, 0, 0.035)),
+          var(--receipt);
+        -webkit-mask:
+          conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 11px 100%,
+          conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) 50% / 11px 100%;
+        -webkit-mask-composite: source-in;
+        mask:
+          conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / 11px 100%,
+          conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) 50% / 11px 100%;
+        mask-composite: intersect;
+      }
+      .r-head {
+        text-align: center;
+        margin-bottom: 4px;
+      }
+      .r-head h2 {
+        margin: 0;
+        font: 700 14px/1.3 var(--mono);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+      .r-head p {
+        margin: 2px 0 0;
+        font-size: 12px;
+        opacity: 0.75;
+      }
+      .r-sep {
         border: 0;
-        border-radius: 11px;
-        background: var(--work);
-        color: #fff;
-        padding: 0 18px;
-        font-weight: 700;
-        cursor: pointer;
+        border-top: 1.5px dashed currentColor;
+        opacity: 0.45;
+        margin: 10px 0;
       }
-      .aside {
-        margin-top: 28px;
-        padding-top: 18px;
-        border-top: 1px solid var(--line);
-      }
-      .warnings {
-        background: #fff4df;
-        border: 1px solid #ebc67d;
-        border-radius: 12px;
-        padding: 12px 18px;
-      }
-      .empty {
-        color: var(--muted);
-        font-style: italic;
-      }
-      .expense-summary {
-        background: #fff4df;
-        border: 1px solid #ebc67d;
-        border-radius: 14px;
-        padding: 18px;
-      }
-      .expense-summary p,
-      .expense-row p,
-      .expense-row small {
-        color: var(--muted);
-      }
-      .expense-totals {
+      .r-line {
         display: flex;
-        flex-wrap: wrap;
-        gap: 18px;
-        font-size: 24px;
+        align-items: baseline;
+        gap: 6px;
       }
-      .expense-list {
-        display: grid;
-        gap: 10px;
+      .r-line .lead {
+        flex: 1;
+        border-bottom: 1.5px dotted color-mix(in srgb, currentColor 45%, transparent);
+        transform: translateY(-4px);
+        min-width: 10px;
       }
-      .expense-row {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 15px;
-        background: var(--card);
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        padding: 15px;
+      .r-line .amt {
+        white-space: nowrap;
+        font-weight: 700;
       }
-      .expense-row.review {
-        border-left: 5px solid var(--amber);
+      .r-total {
+        font-size: 19px;
+        line-height: 1.35;
       }
-      .expense-row h3 {
-        margin: 2px 0;
-        font-size: 16px;
+      .r-total .lbl {
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
       }
-      .expense-row p,
-      .expense-row small {
+      .r-h {
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        font-size: 12px;
+        margin: 0 0 6px;
+        display: flex;
+        justify-content: space-between;
+      }
+      .r-items {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .r-items li {
+        position: relative;
+        margin: 0 0 7px;
+      }
+      .r-items .mer {
+        overflow-wrap: anywhere;
+      }
+      .r-items .sub {
         display: block;
+        font-size: 11.5px;
+        opacity: 0.72;
+        overflow-wrap: anywhere;
+      }
+      .r-items li.rev .sub.raison {
+        opacity: 1;
+        font-weight: 600;
+        border-left: 3px solid #e9c21f;
+        padding-left: 6px;
+        margin-top: 2px;
+      }
+      .flag {
+        position: absolute;
+        right: -32px;
+        top: 1px;
+        width: 26px;
+        height: 15px;
+        background: linear-gradient(90deg, rgba(0, 0, 0, 0.08), transparent 30%), #f5d33c;
+        clip-path: polygon(0 0, 100% 0, 78% 50%, 100% 100%, 0 100%);
+        opacity: 0.92;
+      }
+      .r-more {
+        display: block;
+        width: 100%;
+        border: 1.5px dashed color-mix(in srgb, currentColor 45%, transparent);
+        background: none;
+        border-radius: 3px;
+        padding: 7px 8px;
+        font: 600 12px/1 var(--mono);
+        cursor: pointer;
+        color: var(--receipt-ink);
+        text-align: center;
+      }
+      .r-detail {
+        margin-top: 10px;
+      }
+      .r-fine {
+        font-size: 11px;
+        line-height: 1.4;
+        opacity: 0.7;
         margin: 0;
       }
-      .expense-row small {
-        color: #8a5716;
+
+      /* ——— fichier : notes et écartés ——— */
+      .cabinet {
+        border-radius: 7px;
+        padding: 9px;
+        background:
+          repeating-linear-gradient(91deg, rgba(0, 0, 0, 0.07) 0 1px, transparent 1px 6px),
+          repeating-linear-gradient(89deg, rgba(255, 255, 255, 0.05) 0 2px, transparent 2px 11px),
+          linear-gradient(180deg, var(--wood-a), var(--wood-b));
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.2),
+          0 2px 0 var(--shadow),
+          0 10px 20px var(--shadow-soft);
       }
-      .expense-row > b {
-        white-space: nowrap;
+      details.drawer {
+        border-radius: 4px;
+        background:
+          repeating-linear-gradient(92deg, rgba(0, 0, 0, 0.08) 0 1px, transparent 1px 5px),
+          linear-gradient(180deg, var(--wood-a), var(--wood-b));
+        box-shadow:
+          inset 0 0 0 1px rgba(0, 0, 0, 0.35),
+          inset 0 2px 0 rgba(255, 255, 255, 0.14),
+          0 1px 0 rgba(0, 0, 0, 0.2);
       }
-      footer {
-        margin-top: 35px;
-        font-size: 12px;
+      details.drawer + details.drawer {
+        margin-top: 8px;
       }
-      .fatal {
-        max-width: 720px;
-        margin: 80px auto;
-        background: white;
-        border: 1px solid var(--line);
-        padding: 25px;
-        border-radius: 16px;
+      details.drawer summary {
+        list-style: none;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 12px;
+        cursor: pointer;
       }
-      @media (max-width: 650px) {
-        header {
-          grid-template-columns: 1fr;
+      details.drawer summary::-webkit-details-marker {
+        display: none;
+      }
+      .holder {
+        justify-self: start;
+        display: inline-flex;
+        gap: 8px;
+        align-items: baseline;
+        padding: 5px 10px 4px;
+        background: var(--grain), var(--card);
+        color: #1b1b1b;
+        font: 600 12.5px/1.1 var(--f);
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        border: 3px solid var(--brass-b);
+        border-image: linear-gradient(135deg, var(--brass-a), var(--brass-b), var(--brass-a)) 1;
+        box-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+      }
+      .holder b {
+        font: 700 12px/1 var(--mono);
+      }
+      .pull {
+        width: 40px;
+        height: 13px;
+        border-radius: 2px 2px 14px 14px;
+        background: linear-gradient(180deg, var(--brass-a), var(--brass-b));
+        box-shadow:
+          0 2px 2px rgba(0, 0, 0, 0.45),
+          inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        transition: transform 0.15s;
+      }
+      details[open] .pull {
+        transform: translateY(2px);
+      }
+      .cards {
+        padding: 2px 9px 10px;
+      }
+      details[open] .cards {
+        animation: tiroir 0.24s ease-out;
+      }
+      @keyframes tiroir {
+        from {
+          transform: translateY(-10px);
+          opacity: 0;
         }
-        .progress-wrap {
-          text-align: left;
+      }
+      .fiche {
+        margin: 0 0 8px;
+        padding: 3px 11px 3px;
+        color: #1d1d1f;
+        font: 13px/20px var(--f);
+        background:
+          linear-gradient(180deg, transparent 0 19px, #d9534f 19px 20.5px, transparent 20.5px) 0 0 / 100% 100% no-repeat,
+          repeating-linear-gradient(180deg, transparent 0 19px, #a8c8e8 19px 20px) 0 3px,
+          var(--card);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+      }
+      .fiche.note {
+        font-style: normal;
+      }
+      .fiche-fin {
+        font: 12px/1.4 var(--f);
+        color: #f1e8dc;
+        margin: 4px 2px 0;
+        opacity: 0.85;
+      }
+
+      /* ——— pied ——— */
+      .foot {
+        max-width: 1384px;
+        margin: 0 auto;
+        padding: 0 28px 50px;
+        font: 11.5px/1.5 var(--mono);
+        color: var(--engrave);
+        text-shadow: 0 1px 0 var(--engrave-hi);
+        opacity: 0.82;
+      }
+      .foot b {
+        font-weight: 700;
+      }
+
+      /* ——— guichet fermé ——— */
+      .ferme {
+        max-width: 420px;
+        margin: 90px auto;
+        padding: 26px 26px 22px;
+        background: var(--grain), var(--board);
+        color: #fff;
+        border-radius: 6px;
+        box-shadow: 0 10px 24px var(--shadow-soft);
+        text-align: left;
+      }
+      .ferme h1 {
+        margin: 0 0 8px;
+        font: 700 34px/1 var(--f);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+      }
+
+
+      /* ——— largeurs ——— */
+      @media (max-width: 1180px) {
+        .desk {
+          grid-template-columns: 276px minmax(0, 1fr);
+          grid-template-areas:
+            "eph main"
+            "disp main"
+            "rcpt main"
+            "drw main";
+          grid-template-rows: auto auto auto 1fr;
         }
-        .agenda ul {
+      }
+      @media (max-width: 760px) {
+        .desk {
+          grid-template-columns: minmax(0, 1fr);
+          grid-template-areas: "eph" "main" "disp" "rcpt" "drw";
+          grid-template-rows: none;
+          padding: 14px 14px 20px;
+          gap: 22px;
+        }
+        .board {
+          padding: 26px 9px 9px;
+        }
+        .sheet {
+          padding: 9px 12px 11px;
+        }
+        .s-date {
+          padding: 2px 0 6px;
+          gap: 0 12px;
+        }
+        .s-num {
+          font-size: 66px;
+        }
+        .s-day {
+          font-size: 19px;
+        }
+        .s-yday {
+          margin-top: 3px;
+        }
+        .s-block {
+          padding-top: 6px;
+        }
+        .s-block + .s-block {
+          margin-top: 6px;
+        }
+        .s-h {
+          margin-bottom: 5px;
+        }
+        .rdv small {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .rdv li > span {
+          min-width: 0;
+        }
+        .ech button {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          padding-top: 1px;
+          padding-bottom: 1px;
+        }
+        .ech button::before {
+          top: 6px;
+        }
+        .counter {
+          font-size: 26px;
+        }
+        .reste {
+          margin-top: 4px;
+        }
+        .only-small {
           display: block;
         }
-        .agenda li {
-          margin: 7px 0;
-        }
         .task {
-          grid-template-columns: 30px 1fr;
+          --sw: 62px;
         }
-        .roll {
-          grid-column: 2;
+        .task.big {
+          --sw: 68px;
+        }
+        .task.rolled .ticket {
+          transform: translateX(8px) rotate(0.4deg);
+        }
+        .body {
+          padding: 9px 11px 10px 13px;
+        }
+        .kind {
+          padding-right: 0;
+        }
+        .avis {
+          grid-template-columns: auto 1fr;
+        }
+        .avis .voir {
+          display: none;
+        }
+        .avis .txt {
+          -webkit-line-clamp: 3;
+        }
+
+        .task.big h3 {
+          font-size: 19px;
+        }
+        .receipt {
+          transform: none;
+          margin-right: 18px;
+        }
+        .foot {
+          padding: 0 14px 60px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation: none !important;
+          transition: none !important;
+        }
+        .ghost {
+          display: none;
         }
       }
     </style>
   </head>
   <body>
+    <svg class="defs" aria-hidden="true" focusable="false">
+      <filter id="encre" x="-8%" y="-15%" width="116%" height="130%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="7" result="bruit" />
+        <feDisplacementMap in="SourceGraphic" in2="bruit" scale="2.4" xChannelSelector="R" yChannelSelector="G" result="bave" />
+        <feComponentTransfer in="bruit" result="trous">
+          <feFuncA type="discrete" tableValues="1 1 1 0.35 1 1 1 1 1" />
+        </feComponentTransfer>
+        <feComposite in="bave" in2="trous" operator="in" />
+      </filter>
+      <symbol id="i-tampon" viewBox="0 0 20 20">
+        <circle cx="10" cy="3.6" r="2.9" fill="currentColor" />
+        <rect x="8.5" y="5.6" width="3" height="5.2" fill="currentColor" />
+        <rect x="3" y="10.6" width="14" height="3.6" rx="1" fill="currentColor" />
+        <rect x="2" y="15.3" width="16" height="2" fill="currentColor" opacity=".5" />
+      </symbol>
+    </svg>
     <main id="app"></main>
     <script>
       "use strict";
       const PREFIX = "hermes-daily-todo:";
       let DATA, DAY;
+      const CALME = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+      const MOIS_C = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+      const JOURS = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
+      const JOURS_C = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
+      const KIND = {
+        work: { outcomes: "Résultat du jour", actions: "Action", prospects: "Prospect", followups: "Relance" },
+        private: { outcomes: "Priorité perso", actions: "Action privée", followups: "Relance / échéance" },
+      };
       const el = (tag, cls, text) => {
         const n = document.createElement(tag);
         if (cls) n.className = cls;
         if (text !== undefined) n.textContent = text;
         return n;
       };
+      const icon = (id) => {
+        const s = document.createElementNS("http://www.w3.org/2000/svg", "svg"),
+          u = document.createElementNS("http://www.w3.org/2000/svg", "use");
+        s.setAttribute("viewBox", "0 0 20 20");
+        s.setAttribute("aria-hidden", "true");
+        u.setAttribute("href", "#" + id);
+        s.append(u);
+        return s;
+      };
+
+      /* ——— dates (calculées depuis "AAAA-MM-JJ", sans fuseau) ——— */
+      function jour(s) {
+        const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s || "");
+        return m ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])) : null;
+      }
+      function plus(d, n) {
+        const x = new Date(d.getTime());
+        x.setUTCDate(x.getUTCDate() + n);
+        return x;
+      }
+      function semaine(d) {
+        const t = new Date(d.getTime()),
+          wd = t.getUTCDay() || 7;
+        t.setUTCDate(t.getUTCDate() + 4 - wd);
+        const y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+        return Math.ceil(((t - y0) / 864e5 + 1) / 7);
+      }
+      function quantieme(d) {
+        return Math.round((d - Date.UTC(d.getUTCFullYear(), 0, 1)) / 864e5) + 1;
+      }
+      const ddmm = (s) => {
+        const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s || "");
+        return m ? m[3] + "/" + m[2] : s || "";
+      };
+      function minutes(s) {
+        if (!s) return 0;
+        const h = /(\d+)\s*h(?:\s*(\d+))?/i.exec(s),
+          m = /(\d+)\s*min/i.exec(s);
+        return (h ? +h[1] * 60 + (+h[2] || 0) : 0) + (m ? +m[1] : 0);
+      }
+      function duree(min) {
+        if (min < 60) return min + " min";
+        const h = Math.floor(min / 60),
+          r = min % 60;
+        return h + " h" + (r ? " " + String(r).padStart(2, "0") : "");
+      }
+      function courte(s) {
+        const m = /\d+\s*(?:min|h(?:\s*\d+)?)/i.exec(s || "");
+        return m ? m[0].replace(/\s+/g, " ") : "";
+      }
+
+      /* ——— contrat : lecture et état (identique à la page actuelle) ——— */
       function decodePayload() {
         const raw = location.hash.slice(1);
         if (!raw) {
@@ -372,29 +1713,111 @@
         localStorage.setItem(PREFIX + DAY, JSON.stringify(s));
         progress();
       }
+
+      /* ——— le billet ——— */
+      let TODAY_RE = null;
+      function dateDuJour(deadline) {
+        const d = (deadline || "").toLowerCase();
+        if (!d || /sans échéance|semaine|demain/.test(d)) return false;
+        return /aujourd/.test(d) || (TODAY_RE && TODAY_RE.test(d)) || /\b\d{1,2}\s?h\b|\b\d{1,2}[:h]\d{2}\b/.test(d);
+      }
+      /* provenance transmise par Albert : affichée seulement quand elle existe */
+      const NATURE = { confirmed: "confirmée par la source", suggested: "proposée par Albert", unknown: "à confirmer" };
+      function provenance(t, why) {
+        const lignes = [
+          ["Interlocuteur", t.contact],
+          ["Objet", t.source_title],
+          ["Date de la source", t.source_date],
+          ["Échéance", t.deadline_kind && (NATURE[t.deadline_kind] || t.deadline_kind)],
+          ["Vérifié", t.verified_at],
+        ];
+        for (const [label, valeur] of lignes) if (valeur) why.append(el("p", "src", label + " : " + valeur));
+        if (t.source_url) {
+          try {
+            const u = new URL(t.source_url);
+            if (u.protocol === "https:") {
+              const a = el("a", "src", "Ouvrir la source");
+              a.href = u.href;
+              a.target = "_blank";
+              a.rel = "noopener noreferrer";
+              why.append(a);
+            }
+          } catch (e) {}
+        }
+      }
       function taskNode(t, area, bucket = "actions") {
-        const card = el(
-          "article",
-          "task " + (t.priority === "high" ? "high" : ""),
-        );
+        const card = el("article", "task" + (t.priority === "high" ? " high" : "") + (bucket === "outcomes" ? " big" : ""));
         card.dataset.id = t.id;
         card.dataset.area = area;
         card.dataset.bucket = bucket;
-        const label = el("label", "check"),
-          check = document.createElement("input"),
-          box = el("span");
+        card.dataset.dur = t.duration || "";
+        const carried = String(t.id).indexOf("carry-") === 0,
+          manual = t.source === "Ajout manuel";
+        if (carried) card.classList.add("carried");
+        if (manual) card.classList.add("manual");
+        const title = t.title || "Action à préciser";
+        const ticket = el("div", "ticket"),
+          stub = el("label", "stub"),
+          check = document.createElement("input");
         check.type = "checkbox";
         check.className = "done";
-        label.append(check, box);
-        const body = el("div", "task-body"),
-          h = el("h3", "", t.title || "Action à préciser");
-        body.append(h);
-        if (t.why) body.append(el("p", "", t.why));
-        const bits = [t.duration, t.deadline, t.source].filter(Boolean);
-        if (bits.length) body.append(el("div", "meta", bits.join(" · ")));
-        const roll = el("button", "roll", "Demain");
+        check.setAttribute("aria-label", "Fait : " + title);
+        check.title = "Composter (Espace) · reporter à demain (D)";
+        const punch = el("span", "punch");
+        punch.setAttribute("aria-hidden", "true");
+        stub.append(el("span", "no", "N°"), check, punch, el("span", "dur", courte(t.duration)));
+        const body = el("div", "body"),
+          kind = el("div", "kind");
+        kind.append(el("span", "k", (KIND[area] && KIND[area][bucket]) || "Action"));
+        if (t.priority === "high") kind.append(el("span", "prio", "Prioritaire"));
+        if (carried) kind.append(el("span", "tag carry", "Repris du " + ddmm(DATA.previous_day && DATA.previous_day.date)));
+        if (manual) kind.append(el("span", "tag man", "Ajout manuel"));
+        const h = el("h3", "", title);
+        body.append(kind, h);
+        const row = el("div", "row");
+        if (t.deadline) {
+          const today = dateDuJour(t.deadline);
+          row.append(el("span", "valid" + (today ? " today" : ""), (/^sans/i.test(t.deadline) ? "" : "Échéance : ") + t.deadline));
+        } else row.append(el("span", "valid", ""));
+        const btns = el("span", "btns");
+        let why = null;
+        if (t.why || (t.duration && t.duration !== courte(t.duration)) || (t.source && !manual) || t.contact || t.source_title || t.source_url) {
+          why = el("div", "why");
+          why.hidden = true;
+          why.id = "why-" + String(t.id).replace(/[^\w-]/g, "_");
+          if (t.why) why.append(el("p", "", t.why));
+          if (t.duration && t.duration !== courte(t.duration)) why.append(el("p", "src", "Durée : " + t.duration));
+          if (t.source) why.append(el("p", "src", "Source : " + t.source));
+          provenance(t, why);
+          const wb = el("button", "tbtn whyb", "Pourquoi");
+          wb.type = "button";
+          wb.setAttribute("aria-expanded", "false");
+          wb.setAttribute("aria-controls", why.id);
+          const toggle = () => {
+            why.hidden = !why.hidden;
+            wb.setAttribute("aria-expanded", String(!why.hidden));
+            wb.textContent = why.hidden ? "Pourquoi" : "Replier";
+          };
+          wb.onclick = toggle;
+          h.onclick = toggle;
+          btns.append(wb);
+        }
+        const roll = el("button", "tbtn roll");
+        roll.type = "button";
         roll.title = "Reporter explicitement au lendemain";
-        card.append(label, body, roll);
+        roll.append(icon("i-tampon"), el("span", "lbl", "Demain"));
+        roll.setAttribute("aria-label", "Reporter à demain : " + title);
+        btns.append(roll);
+        row.append(btns);
+        body.append(row);
+        if (why) body.append(why);
+        const rm = el("span", "roll-mark", "Reporté");
+        rm.append(el("small", "", "au " + DEMAIN));
+        kind.append(rm);
+        const dm = el("div", "imprint done-mark", "Composté " + ddmm(DAY));
+        dm.setAttribute("aria-hidden", "true");
+        ticket.append(stub, body, dm);
+        card.append(ticket);
         wire(card);
         return card;
       }
@@ -406,11 +1829,14 @@
         check.checked = !!(s[id] && s[id].done);
         roll.classList.toggle("active", !!(s[id] && s[id].roll));
         card.classList.toggle("done", check.checked);
+        paintRoll(card, roll);
         check.onchange = () => {
           const q = getState();
           q[id] = Object.assign(q[id] || {}, { done: check.checked });
           save(q);
           card.classList.toggle("done", check.checked);
+          if (check.checked) poincon(card);
+          progress();
         };
         roll.onclick = () => {
           const q = getState();
@@ -422,22 +1848,50 @@
           });
           save(q);
           roll.classList.toggle("active", q[id].roll);
+          paintRoll(card, roll);
+          if (q[id].roll) tamponne(card);
+          progress();
         };
       }
+      function paintRoll(card, roll) {
+        const on = roll.classList.contains("active");
+        card.classList.toggle("rolled", on);
+        roll.setAttribute("aria-pressed", String(on));
+        roll.querySelector(".lbl").textContent = on ? "Reporté" : "Demain";
+      }
+      function poincon(card) {
+        if (navigator.vibrate) navigator.vibrate(8);
+        if (CALME) return;
+        const t = card.querySelector(".ticket");
+        t.classList.remove("thunk");
+        void t.offsetWidth;
+        t.classList.add("thunk");
+        const c = el("i", "confetti");
+        c.style.setProperty("--dx", Math.round(Math.random() * 40 - 26) + "px");
+        c.addEventListener("animationend", () => c.remove());
+        card.append(c);
+      }
+      function tamponne(card) {
+        if (CALME) return;
+        card.classList.add("just");
+        setTimeout(() => card.classList.remove("just"), 400);
+        const t = card.querySelector(".ticket");
+        t.classList.remove("thunk");
+        void t.offsetWidth;
+        t.classList.add("thunk");
+      }
       function section(title, tasks, area, empty, bucket = "actions") {
-        const s = el("section"),
-          h = el("h2", "", title),
+        const s = el("section", "sec"),
+          h = el("h2", "sec-title", title),
           list = el("div", "task-list");
         s.dataset.section = bucket;
         s.append(h, list);
-        if (tasks.length)
-          tasks.forEach((t) => list.append(taskNode(t, area, bucket)));
+        if (tasks.length) tasks.forEach((t) => list.append(taskNode(t, area, bucket)));
         else list.append(el("p", "empty", empty));
         return s;
       }
       function money(amount, currency) {
-        if (amount === null || amount === undefined)
-          return "Montant à confirmer";
+        if (amount === null || amount === undefined) return "Montant à confirmer";
         return (
           new Intl.NumberFormat("fr-BE", {
             minimumFractionDigits: 2,
@@ -447,93 +1901,161 @@
           (currency || "EUR")
         );
       }
+
+      /* ——— ticket de caisse : dépenses du mois ——— */
       function expensePanel(data) {
-        const panel = el("div", "panel");
+        const panel = el("aside", "rcpt");
         panel.id = "expenses";
-        const summary = el("section", "expense-summary");
-        summary.append(el("h2", "", data.label || "Dépenses du mois"));
-        const totals = el("div", "expense-totals");
-        (data.totals || []).forEach((t) =>
-          totals.append(el("strong", "", money(t.amount, t.currency))),
-        );
-        if (!totals.children.length)
-          totals.append(el("strong", "", "Aucun total fiable"));
-        summary.append(totals);
-        if (data.basis) summary.append(el("p", "", data.basis));
-        const listSection = el("section"),
-          list = el("div", "expense-list");
-        listSection.append(el("h2", "", "Dépenses repérées"), list);
-        (data.items || []).forEach((item) => {
-          const row = el(
-              "article",
-              "expense-row" + (item.review_reason ? " review" : ""),
-            ),
-            body = el("div");
-          body.append(
-            el("time", "", item.date || "Date à confirmer"),
-            el("h3", "", item.merchant || "Fournisseur à identifier"),
-            el(
-              "p",
-              "",
-              [item.category, item.status].filter(Boolean).join(" · "),
-            ),
+        panel.setAttribute("aria-label", "Dépenses du mois");
+        const r = el("div", "receipt"),
+          head = el("div", "r-head");
+        head.append(el("h2", "", "Dépenses du mois"), el("p", "", data.label || "Mois en cours"));
+        const info = [];
+        if (data.as_of) info.push("arrêté au " + ddmm(data.as_of));
+        if ((data.items || []).length) info.push((data.items || []).length + " documents");
+        if (info.length) head.append(el("p", "", info.join(" · ")));
+        r.append(head, el("hr", "r-sep"));
+        const totals = (data.totals || []).filter((t) => t && t.amount !== null && t.amount !== undefined);
+        if (totals.length)
+          totals.forEach((t, i) => {
+            const line = el("div", "r-line r-total");
+            line.append(el("span", "lbl", i ? "" : "TOTAL"), el("span", "lead"), el("span", "amt", money(t.amount, t.currency)));
+            r.append(line);
+          });
+        else r.append(el("div", "r-line r-total", "Aucun total fiable"));
+        const items = data.items || [],
+          rev = items.filter((i) => i.review_reason),
+          ok = items.filter((i) => !i.review_reason);
+        const row = (item, review) => {
+          const li = el("li", review ? "rev" : ""),
+            line = el("div", "r-line");
+          line.append(
+            el("span", "mer", ddmm(item.date) + " " + (item.merchant || "Fournisseur à identifier")),
+            el("span", "lead"),
+            el("span", "amt", item.amount === null || item.amount === undefined ? "??,?? " + (item.currency || "EUR") : money(item.amount, item.currency)),
           );
-          if (item.review_reason)
-            body.append(el("small", "", item.review_reason));
-          row.append(body, el("b", "", money(item.amount, item.currency)));
-          list.append(row);
-        });
-        if (!list.children.length)
-          list.append(el("p", "empty", "Aucune dépense repérée pour ce mois."));
-        panel.append(summary, listSection);
+          li.append(line);
+          const sub = [item.category, review && item.status === "À vérifier" ? "" : item.status].filter(Boolean).join(" · ");
+          if (sub) li.append(el("span", "sub", sub));
+          if (review) {
+            li.append(el("span", "sub raison", item.review_reason));
+            const f = el("i", "flag");
+            f.setAttribute("aria-hidden", "true");
+            li.append(f);
+          }
+          return li;
+        };
+        r.append(el("hr", "r-sep"));
+        const hv = el("p", "r-h");
+        hv.append(el("span", "", "À vérifier"), el("span", "", String(rev.length)));
+        r.append(hv);
+        if (rev.length) {
+          const ul = el("ul", "r-items");
+          rev.forEach((i) => ul.append(row(i, true)));
+          r.append(ul);
+        } else r.append(el("p", "r-fine", "Rien à vérifier."));
+        if (ok.length) {
+          r.append(el("hr", "r-sep"));
+          const more = el("button", "r-more", "Dérouler le détail · " + ok.length + " ligne" + (ok.length > 1 ? "s" : "")),
+            det = el("ul", "r-items r-detail");
+          more.type = "button";
+          more.setAttribute("aria-expanded", "false");
+          det.hidden = true;
+          ok.forEach((i) => det.append(row(i, false)));
+          more.onclick = () => {
+            det.hidden = !det.hidden;
+            more.setAttribute("aria-expanded", String(!det.hidden));
+            more.textContent = det.hidden ? "Dérouler le détail · " + ok.length + " ligne" + (ok.length > 1 ? "s" : "") : "Enrouler le détail";
+          };
+          r.append(more, det);
+        }
+        if (!items.length) r.append(el("p", "r-fine", "Aucune dépense repérée pour ce mois."));
+        if (data.basis) {
+          r.append(el("hr", "r-sep"), el("p", "r-fine", data.basis));
+        }
+        panel.append(r);
         return panel;
       }
-      function addBox(area, panel) {
-        const box = el("div", "add-box"),
+
+      /* ——— distributeur : ajout manuel par zone ——— */
+      function addBox(panels) {
+        const wrap = el("div", "disp"),
+          m = el("form", "machine");
+        m.setAttribute("aria-label", "Ajouter une tâche");
+        const lab = el("div", "machine-label");
+        const k = el("kbd", "", "N");
+        k.title = "Raccourci clavier : N";
+        lab.append(el("span", "", "Distributeur de billets"), k);
+        const rolls = el("div", "rolls"),
+          slot = el("div", "slot"),
           input = document.createElement("input"),
-          btn = el("button", "", "Ajouter");
-        input.placeholder =
-          area === "work"
-            ? "Ajouter une tâche professionnelle…"
-            : "Ajouter une tâche privée…";
-        box.append(input, btn);
-        btn.onclick = () => {
+          btn = el("button", "", "Imprimer");
+        let area = "work";
+        input.id = "nouveau";
+        input.autocomplete = "off";
+        btn.type = "submit";
+        const setArea = (a) => {
+          area = a;
+          slot.classList.toggle("private", a === "private");
+          input.placeholder = a === "work" ? "Nouveau billet Travail…" : "Nouveau billet Privé…";
+          input.setAttribute("aria-label", a === "work" ? "Ajouter une tâche professionnelle" : "Ajouter une tâche privée");
+          rolls.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.area === a)));
+        };
+        [
+          ["work", "Travail", "var(--work)"],
+          ["private", "Privé", "var(--priv)"],
+        ].forEach(([a, label, c]) => {
+          const b = el("button");
+          b.type = "button";
+          b.dataset.area = a;
+          const i = el("i");
+          i.style.setProperty("--c", c);
+          b.append(i, el("span", "", label));
+          b.title = "Rouleau " + label;
+          b.onclick = () => {
+            setArea(a);
+            input.focus();
+          };
+          rolls.append(b);
+        });
+        slot.append(input, btn);
+        m.append(lab, rolls, slot);
+        m.onsubmit = (e) => {
+          e.preventDefault();
           const title = input.value.trim();
           if (!title) return;
           const id = "manual-" + Date.now(),
             q = getState();
           q[id] = { title, area, bucket: "actions", manual: true };
           save(q);
-          const task = {
-              id,
-              title,
-              source: "Ajout manuel",
-              priority: "normal",
-            },
-            target =
-              panel.querySelector(
-                'section[data-section="actions"] .task-list',
-              ) || panel.querySelector(".task-list");
-          target.append(taskNode(task, area, "actions"));
+          const panel = panels[area];
+          const task = { id, title, source: "Ajout manuel", priority: "normal" },
+            target = panel.querySelector('section[data-section="actions"] .task-list') || panel.querySelector(".task-list");
+          const node = taskNode(task, area, "actions");
+          if (!CALME) node.classList.add("issued");
+          target.append(node);
           input.value = "";
+          if (!CALME) {
+            input.classList.remove("avance");
+            void input.offsetWidth;
+            input.classList.add("avance");
+          }
+          progress();
         };
-        panel.append(box);
+        setArea("work");
+        wrap.append(m);
+        return wrap;
       }
       function sourceTasks(data) {
         const out = [];
         for (const area of ["work", "private"]) {
           const group = (data && data[area]) || {};
-          for (const section of [
-            "outcomes",
-            "actions",
-            "prospects",
-            "followups",
-          ])
-            for (const task of group[section] || [])
-              out.push({ task, area, bucket: section });
+          for (const section of ["outcomes", "actions", "prospects", "followups"]) for (const task of group[section] || []) out.push({ task, area, bucket: section });
         }
         return out;
       }
+      /* report automatique de la veille : comme la page précédente, sauf qu'une tâche
+         reprise puis compostée aujourd'hui reste affichée au rechargement */
       function carry(panelByArea) {
         const previous = DATA.previous_day;
         if (!previous || !previous.date) return;
@@ -542,15 +2064,8 @@
           currentIds = new Set(sourceTasks(DATA).map((x) => x.task.id)),
           seen = new Set();
         const append = (id, title, area, bucket, why, source) => {
-          if (
-            !title ||
-            !panelByArea[area] ||
-            currentIds.has(id) ||
-            seen.has(id)
-          )
-            return;
+          if (!title || !panelByArea[area] || currentIds.has(id) || seen.has(id)) return;
           const nid = "carry-" + previous.date + "-" + id;
-          if (now[nid] && now[nid].done) return;
           seen.add(id);
           bucket = bucket || "actions";
           now[nid] = Object.assign(now[nid] || {}, {
@@ -560,12 +2075,8 @@
             manual: true,
           });
           const target =
-              panelByArea[area].querySelector(
-                'section[data-section="' + bucket + '"] .task-list',
-              ) ||
-              panelByArea[area].querySelector(
-                'section[data-section="actions"] .task-list',
-              ) ||
+              panelByArea[area].querySelector('section[data-section="' + bucket + '"] .task-list') ||
+              panelByArea[area].querySelector('section[data-section="actions"] .task-list') ||
               panelByArea[area].querySelector(".task-list"),
             empty = target.querySelector(".empty");
           if (empty) empty.remove();
@@ -590,203 +2101,355 @@
               task.title,
               area,
               bucket,
-              "Non terminée le " +
-                (previous.display_date || previous.date) +
-                ".",
-              task.source
-                ? "Report de la veille · " + task.source
-                : "Report automatique de la veille",
+              "Non terminée le " + (previous.display_date || previous.date) + ".",
+              task.source ? "Report de la veille · " + task.source : "Report automatique de la veille",
             );
         });
         Object.entries(old).forEach(([id, v]) => {
-          if (v && v.manual && v.title && !v.done)
-            append(
-              id,
-              v.title,
-              v.area || "work",
-              v.bucket || "actions",
-              "Ajout manuel non terminé la veille.",
-              "Report automatique de la veille",
-            );
+          if (v && v.manual && v.title && !v.done) append(id, v.title, v.area || "work", v.bucket || "actions", "Ajout manuel non terminé la veille.", "Report automatique de la veille");
         });
         save(now);
       }
+      /* ajouts manuels du jour : réaffichés au rechargement (écart volontaire, même état) */
+      function restoreManual(panels) {
+        Object.entries(getState()).forEach(([id, v]) => {
+          if (id.indexOf("manual-") !== 0 || !v || !v.manual || !v.title) return;
+          const area = panels[v.area] ? v.area : "work",
+            bucket = v.bucket || "actions",
+            target = panels[area].querySelector('section[data-section="' + bucket + '"] .task-list') || panels[area].querySelector(".task-list");
+          target.append(taskNode({ id, title: v.title, source: "Ajout manuel", priority: "normal" }, area, bucket));
+        });
+      }
+
+      /* ——— progression : compteur, poinçons, échéances ——— */
+      let lastDone = -1;
       function progress() {
         const tasks = [...document.querySelectorAll(".task")],
           done = tasks.filter((x) => x.querySelector(".done").checked).length;
-        const txt = document.getElementById("progressText"),
-          bar = document.getElementById("progressBar");
-        if (txt)
-          txt.textContent =
-            done + " / " + tasks.length + " terminée" + (done > 1 ? "s" : "");
-        if (bar)
-          bar.style.width =
-            (tasks.length ? (100 * done) / tasks.length : 0) + "%";
-      }
-      function render() {
-        DAY = DATA.date;
-        const app = document.getElementById("app");
-        app.className = "shell";
-        const header = el("header"),
-          left = el("div");
-        left.append(
-          el("div", "eyebrow", "Cap du jour"),
-          el("h1", "", "To-do quotidienne"),
-          el("div", "date", DATA.display_date || DAY),
-        );
-        const pw = el("div", "progress-wrap"),
-          pt = el("b", "", "0 tâche terminée"),
-          p = el("div", "progress"),
-          pi = el("i");
-        pt.id = "progressText";
-        pi.id = "progressBar";
-        p.append(pi);
-        pw.append(pt, p);
-        header.append(left, pw);
-        app.append(header);
-        const ag = el("div", "agenda");
-        ag.append(el("h2", "", "Agenda et contraintes"));
-        const ul = el("ul");
-        (DATA.agenda || []).forEach((a) => {
-          const li = el("li");
-          li.append(
-            el("time", "", a.time || ""),
-            el("span", "", a.title || ""),
+        tasks.forEach((c, i) => {
+          const no = c.querySelector(".no");
+          if (no) no.textContent = "N° " + String(i + 1).padStart(2, "0");
+        });
+        document.querySelectorAll("section.sec").forEach((s) => (s.hidden = !s.querySelector(".task")));
+        document.querySelectorAll(".area").forEach((a) => {
+          const n = a.querySelectorAll(".task").length,
+            d = a.querySelectorAll(".task.done").length,
+            e = a.querySelector(".area-empty"),
+            sub = a.querySelector(".area-sub");
+          if (e) e.hidden = n > 0;
+          if (sub) sub.textContent = n ? n + " billet" + (n > 1 ? "s" : "") + " · " + d + " fait" + (d > 1 ? "s" : "") : "";
+        });
+        const holes = document.getElementById("holes");
+        if (holes) {
+          holes.replaceChildren(
+            ...tasks.map((c) => {
+              const i = el("i", c.classList.contains("done") ? "p" : c.classList.contains("rolled") ? "r" : "");
+              i.title = c.querySelector(".no").textContent + " · " + c.querySelector("h3").textContent;
+              i.onclick = () => montre(c.dataset.id);
+              return i;
+            }),
           );
+        }
+        const n = document.getElementById("cDone"),
+          tot = document.getElementById("cTot");
+        if (n) {
+          if (lastDone !== -1 && lastDone !== done && !CALME) {
+            n.classList.remove("tick");
+            void n.offsetWidth;
+            n.classList.add("tick");
+          }
+          n.textContent = String(done);
+          tot.textContent = "/" + tasks.length;
+        }
+        lastDone = done;
+        const txt = document.getElementById("progressText");
+        if (txt) {
+          const left = tasks.filter((c) => !c.classList.contains("done") && !c.classList.contains("rolled")),
+            mins = left.reduce((a, c) => a + minutes(c.dataset.dur), 0),
+            rolled = tasks.filter((c) => c.classList.contains("rolled") && !c.classList.contains("done")).length;
+          const bits = [];
+          bits.push(done + " fait" + (done > 1 ? "s" : "") + " sur " + tasks.length);
+          if (left.length && mins) bits.push("≈ " + duree(mins) + " restantes");
+          if (rolled) bits.push(rolled + " pour demain");
+          txt.textContent = bits.join(" · ");
+        }
+        const sheet = document.querySelector(".sheet");
+        if (sheet) sheet.classList.toggle("all", tasks.length > 0 && done === tasks.length);
+        document.querySelectorAll(".ech button").forEach((b) => {
+          const c = document.querySelector('.task[data-id="' + CSS.escape(b.dataset.id) + '"]');
+          b.classList.toggle("ok", !!(c && c.classList.contains("done")));
+        });
+      }
+
+      /* ——— éphéméride ——— */
+      function ephemeride() {
+        const d = jour(DAY),
+          wrap = el("div", "eph"),
+          board = el("div", "board"),
+          lab = el("div", "board-label");
+        const gen = /T(\d{2}):(\d{2})/.exec(DATA.generated_at || "");
+        lab.append(el("span", "", "Albert"), el("span", "", gen ? "émis à " + gen[1] + ":" + gen[2] : "to-do du jour"));
+        const pad = el("div", "pad"),
+          sheet = el("div", "sheet" + (d && d.getUTCDay() === 0 ? " sunday" : ""));
+        sheet.setAttribute("aria-label", DATA.display_date || DAY);
+        const head = el("div", "s-head");
+        head.append(el("span", "", d ? MOIS[d.getUTCMonth()] + " " + d.getUTCFullYear() : DAY), el("small", "", d ? "sem. " + semaine(d) : ""));
+        const date = el("div", "s-date");
+        const right = el("div");
+        right.append(el("div", "s-day", d ? JOURS[d.getUTCDay()] : ""));
+        if (d) {
+          const q = quantieme(d),
+            y = d.getUTCFullYear(),
+            nb = (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0 ? 366 : 365;
+          const yd = el("div", "s-yday", q + "e jour");
+          yd.append(el("br"), document.createTextNode("reste " + (nb - q) + " j"));
+          right.append(yd);
+        }
+        date.append(el("div", "s-num", d ? String(d.getUTCDate()) : "—"), right);
+        sheet.append(head, date);
+        /* rendez-vous */
+        const b1 = el("div", "s-block");
+        b1.append(el("h2", "s-h", "Rendez-vous"));
+        const ul = el("ul", "rdv");
+        (DATA.agenda || []).forEach((a) => {
+          const li = el("li"),
+            t = String(a.time || "").replace(/^aujourd[’']hui\s*·\s*/i, ""),
+            title = String(a.title || ""),
+            cut = title.search(/\.\s/),
+            span = el("span");
+          span.append(el("b", "", cut > 0 ? title.slice(0, cut) : title));
+          if (cut > 0) span.append(el("small", "", title.slice(cut + 1).trim()));
+          li.append(el("time", "", t), span);
           ul.append(li);
         });
-        if (!ul.children.length)
-          ul.append(
-            el("li", "empty", "Aucun rendez-vous confirmé aujourd’hui."),
-          );
-        ag.append(ul);
-        app.append(ag);
-        if ((DATA.warnings || []).length) {
-          const w = el("ul", "warnings");
-          DATA.warnings.forEach((x) => w.append(el("li", "", x)));
-          app.append(w);
+        if (ul.children.length) b1.append(ul);
+        else b1.append(el("p", "muted", "Aucun rendez-vous confirmé aujourd’hui."));
+        sheet.append(b1);
+        /* échéances du jour */
+        const b2 = el("div", "s-block");
+        b2.append(el("h2", "s-h", "À boucler aujourd’hui"));
+        const due = sourceTasks(DATA).filter((x) => dateDuJour(x.task.deadline));
+        if (due.length) {
+          const ol = el("ul", "ech");
+          due.forEach(({ task }) => {
+            const li = el("li"),
+              b = el("button", "", task.title || "Action à préciser");
+            b.type = "button";
+            b.dataset.id = task.id;
+            b.onclick = () => montre(task.id);
+            li.append(b);
+            ol.append(li);
+          });
+          b2.append(ol);
+        } else b2.append(el("p", "muted", "Aucune échéance ferme aujourd’hui."));
+        sheet.append(b2);
+        /* pointage */
+        const b3 = el("div", "s-block");
+        b3.id = "pointage";
+        b3.append(el("h2", "s-h", "Pointage"));
+        const pt = el("div", "pointage"),
+          holes = el("div", "holes"),
+          counter = el("div", "counter"),
+          n = el("span", "n", "0"),
+          tot = el("small", "", "/0");
+        holes.id = "holes";
+        holes.setAttribute("aria-hidden", "true");
+        n.id = "cDone";
+        tot.id = "cTot";
+        counter.append(n, tot);
+        counter.setAttribute("aria-hidden", "true");
+        pt.append(holes, counter);
+        const txt = el("p", "reste");
+        txt.id = "progressText";
+        txt.setAttribute("role", "status");
+        b3.append(pt, txt);
+        sheet.append(b3);
+        const solde = el("div", "solde", "Journée");
+        solde.append(el("br"), document.createTextNode("bouclée"));
+        solde.setAttribute("aria-hidden", "true");
+        sheet.append(solde);
+        pad.append(el("div", "glue"), sheet, el("div", "stackedge"));
+        board.append(lab, pad);
+        wrap.append(board);
+        /* la feuille d'hier s'arrache, une fois par jour */
+        let vu = null;
+        try {
+          vu = localStorage.getItem("guichet-05:arrache");
+          localStorage.setItem("guichet-05:arrache", DAY);
+        } catch (e) {}
+        if (d && vu !== DAY && !CALME) {
+          const y = DATA.previous_day && jour(DATA.previous_day.date) ? jour(DATA.previous_day.date) : plus(d, -1),
+            g = el("div", "ghost" + (y.getUTCDay() === 0 ? " sunday" : "")),
+            gh = el("div", "s-head"),
+            gd = el("div", "s-date"),
+            gr = el("div");
+          gh.append(el("span", "", MOIS[y.getUTCMonth()] + " " + y.getUTCFullYear()), el("small", "", "sem. " + semaine(y)));
+          gr.append(el("div", "s-day", JOURS[y.getUTCDay()]));
+          gd.append(el("div", "s-num", String(y.getUTCDate())), gr);
+          g.append(gh, gd);
+          g.setAttribute("aria-hidden", "true");
+          g.addEventListener("animationend", () => g.remove());
+          pad.append(g);
         }
-        const nav = el("nav", "tabs"),
-          tabs = [
-            ["work", "Travail"],
-            ["private", "Privé"],
-            ["expenses", "Dépenses du mois"],
-          ],
-          panels = {};
-        tabs.forEach(([id, label], i) => {
-          const b = el("button", "tab" + (i ? "" : " active"), label);
-          b.dataset.tab = id;
-          nav.append(b);
-          if (id !== "expenses") {
-            const panel = el("div", "panel" + (i ? "" : " active"));
-            panel.id = id;
-            panels[id] = panel;
-          }
+        return wrap;
+      }
+      function montre(id) {
+        const c = document.querySelector('.task[data-id="' + CSS.escape(id) + '"]');
+        if (!c) return;
+        c.scrollIntoView({ behavior: CALME ? "auto" : "smooth", block: "center" });
+        c.classList.remove("flash");
+        void c.offsetWidth;
+        c.classList.add("flash");
+        const box = c.querySelector(".done");
+        if (box) box.focus({ preventScroll: true });
+      }
+
+      /* ——— fichier : notes techniques et écartés ——— */
+      function fichier() {
+        const wrap = el("div", "drw"),
+          cab = el("div", "cabinet");
+        const drawer = (label, items, fin, id) => {
+          const d = el("details", "drawer"),
+            s = el("summary"),
+            h = el("span", "holder");
+          d.id = id;
+          h.append(el("span", "", label), el("b", "", String(items.length)));
+          const p = el("span", "pull");
+          p.setAttribute("aria-hidden", "true");
+          s.append(h, p);
+          const c = el("div", "cards");
+          items.forEach((x) => c.append(el("p", "fiche", x)));
+          if (fin) c.append(el("p", "fiche-fin", fin));
+          d.append(s, c);
+          return d;
+        };
+        cab.append(
+          drawer("Écarté par Albert", DATA.deferred || ["Rien n’a été explicitement écarté."], "Les éléments incertains ne deviennent pas automatiquement des priorités.", "differe"),
+          drawer("Notes techniques", DATA.warnings || [], "", "notes"),
+        );
+        wrap.append(cab);
+        return wrap;
+      }
+      const IMPORTANT = /indisponible|pas couverts|non couverts|introuvable|inaccessible/i;
+
+      function render() {
+        DAY = DATA.date;
+        const d = jour(DAY);
+        if (d) {
+          DEMAIN = (JOURS_C[plus(d, 1).getUTCDay()] + " " + plus(d, 1).getUTCDate() + " " + MOIS_C[plus(d, 1).getUTCMonth()]).toUpperCase();
+          TODAY_RE = new RegExp("\\b" + d.getUTCDate() + "\\s+" + MOIS[d.getUTCMonth()]);
+        }
+        const app = document.getElementById("app");
+        app.className = "";
+        const h1 = el("h1", "vh", "To-do quotidienne — " + (DATA.display_date || DAY));
+        const desk = el("div", "desk");
+        const main = el("section", "main");
+        main.setAttribute("aria-label", "Billets du jour");
+        /* avis : seulement si un avertissement change ce qu'il faut faire */
+        const imp = (DATA.warnings || []).filter((w) => IMPORTANT.test(w));
+        if (imp.length) {
+          const a = el("button", "avis"),
+            tp = el("span", "tampon", "Avis"),
+            b = el("span", "voir", "Toutes les notes ›");
+          a.type = "button";
+          a.title = "Ouvrir les notes techniques d’Albert";
+          a.onclick = () => {
+            const n = document.getElementById("notes");
+            n.open = true;
+            n.scrollIntoView({ behavior: CALME ? "auto" : "smooth", block: "start" });
+            n.querySelector("summary").focus({ preventScroll: true });
+          };
+          a.append(tp, el("span", "txt", imp[0]), b);
+          main.append(a);
+        }
+        const panels = {};
+        [
+          ["work", "Travail"],
+          ["private", "Privé"],
+        ].forEach(([id, label]) => {
+          const a = el("div", "area"),
+            head = el("div", "area-head");
+          a.id = id;
+          head.append(el("h2", "dymo", label), el("span", "area-sub"));
+          a.append(head);
+          const empty = el("p", "area-empty", id === "work" ? "Aucun billet Travail aujourd’hui." : "Aucun billet privé aujourd’hui.");
+          a.append(empty);
+          panels[id] = a;
+          main.append(a);
         });
-        app.append(nav);
         const w = DATA.work || {},
           pr = DATA.private || {};
         panels.work.append(
-          section(
-            "Les 3 résultats du jour",
-            w.outcomes || [],
-            "work",
-            "Aucun résultat prioritaire fiable détecté.",
-            "outcomes",
-          ),
-          section(
-            "Actions et préparations",
-            w.actions || [],
-            "work",
-            "Aucune autre action professionnelle retenue.",
-            "actions",
-          ),
-          section(
-            "Prospects à contacter",
-            w.prospects || [],
-            "work",
-            "Aucun prospect à contacter aujourd’hui.",
-            "prospects",
-          ),
-          section(
-            "Relances et attentes",
-            w.followups || [],
-            "work",
-            "Aucune autre relance professionnelle due.",
-            "followups",
-          ),
+          section("Résultats du jour", w.outcomes || [], "work", "Aucun résultat prioritaire fiable détecté.", "outcomes"),
+          section("Actions et préparations", w.actions || [], "work", "Aucune autre action professionnelle retenue.", "actions"),
+          section("Prospects à contacter", w.prospects || [], "work", "Aucun prospect à contacter aujourd’hui.", "prospects"),
+          section("Relances et attentes", w.followups || [], "work", "Aucune autre relance professionnelle due.", "followups"),
         );
-        addBox("work", panels.work);
         panels.private.append(
-          section(
-            "Priorité personnelle",
-            pr.outcomes || [],
-            "private",
-            "Aucune priorité personnelle impérative détectée.",
-            "outcomes",
-          ),
-          section(
-            "Actions privées",
-            pr.actions || [],
-            "private",
-            "Aucune autre action privée retenue.",
-            "actions",
-          ),
-          section(
-            "Relances et échéances",
-            pr.followups || [],
-            "private",
-            "Aucune relance privée due.",
-            "followups",
-          ),
+          section("Priorité personnelle", pr.outcomes || [], "private", "Aucune priorité personnelle impérative détectée.", "outcomes"),
+          section("Actions privées", pr.actions || [], "private", "Aucune autre action privée retenue.", "actions"),
+          section("Relances et échéances", pr.followups || [], "private", "Aucune relance privée due.", "followups"),
         );
-        addBox("private", panels.private);
-        panels.expenses = expensePanel(DATA.monthly_expenses || {});
-        app.append(panels.work, panels.private, panels.expenses);
-        const aside = el("div", "aside");
-        aside.append(el("h2", "", "Délibérément différé"));
-        const dl = el("ul");
-        (DATA.deferred || ["Rien n’a été explicitement écarté."]).forEach((x) =>
-          dl.append(el("li", "", x)),
-        );
-        aside.append(
-          dl,
-          el(
-            "p",
-            "",
-            "Les éléments incertains ne deviennent pas automatiquement des priorités.",
-          ),
-        );
-        app.append(aside);
-        const foot = el(
-          "footer",
-          "",
-          (DATA.generated_at ? "Généré " + DATA.generated_at + " · " : "") +
-            (DATA.source_summary || "Sources non précisées") +
-            " — Les coches, ajouts et reports restent dans ce navigateur.",
+        const eph = ephemeride();
+        /* dépenses en une ligne sur petit écran */
+        const ex = DATA.monthly_expenses || {},
+          revN = (ex.items || []).filter((i) => i.review_reason).length,
+          tl = (ex.totals || []).filter((t) => t && t.amount != null).map((t) => money(t.amount, t.currency));
+        const mini = el("a", "only-small mini-dep");
+        mini.href = "#expenses";
+        mini.textContent = "Dépenses " + (ex.label || "du mois") + " : " + (tl.join(" · ") || "aucun total fiable") + (revN ? " — " + revN + " à vérifier" : "");
+        eph.querySelector("#pointage").append(mini);
+        desk.append(eph, main, addBox(panels), expensePanel(ex), fichier());
+        app.append(h1, desk);
+        const foot = el("footer", "foot");
+        const g = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(DATA.generated_at || "");
+        foot.append(
+          el("b", "", g ? "Émis par Albert le " + +g[3] + " " + MOIS[+g[2] - 1] + " à " + g[4] + ":" + g[5] : DATA.generated_at ? "Émis " + DATA.generated_at : ""),
+          document.createTextNode((DATA.generated_at ? " · " : "") + (DATA.source_summary || "Sources non précisées") + " — Les coches, ajouts et reports restent dans ce navigateur."),
         );
         app.append(foot);
-        document.querySelectorAll(".tab").forEach(
-          (b) =>
-            (b.onclick = () => {
-              document
-                .querySelectorAll(".tab,.panel")
-                .forEach((x) => x.classList.remove("active"));
-              b.classList.add("active");
-              document.getElementById(b.dataset.tab).classList.add("active");
-            }),
-        );
+        restoreManual(panels);
         carry(panels);
+        const carried = document.querySelectorAll(".task.carried").length;
+        if (carried) {
+          const t = document.getElementById("progressText");
+          const p = el("p", "reste");
+          p.append(el("span", "bl", "Repris d’hier : " + carried + " billet" + (carried > 1 ? "s" : "")));
+          t.after(p);
+        }
         progress();
+        document.addEventListener("keydown", (e) => {
+          if ((e.key === "d" || e.key === "D") && !e.ctrlKey && !e.metaKey && !e.altKey) {
+            const c = e.target && e.target.closest && e.target.closest(".task");
+            if (c && e.target.tagName !== "INPUT") return;
+            if (c && e.target.classList.contains("done")) {
+              e.preventDefault();
+              c.querySelector(".roll").click();
+              return;
+            }
+          }
+          if (e.key !== "n" && e.key !== "N") return;
+          if (e.ctrlKey || e.metaKey || e.altKey) return;
+          const t = e.target;
+          if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+          e.preventDefault();
+          const i = document.getElementById("nouveau");
+          i.focus();
+          i.scrollIntoView({ block: "center", behavior: CALME ? "auto" : "smooth" });
+        });
       }
+      let DEMAIN = "DEMAIN";
+
+
       try {
         DATA = decodePayload();
         if (!DATA || !DATA.date) throw new Error("Format de liste invalide.");
         render();
       } catch (e) {
         const a = document.getElementById("app");
-        a.className = "fatal";
-        a.append(el("h1", "", "To-do indisponible"), el("p", "", e.message));
+        a.replaceChildren();
+        a.className = "ferme";
+        a.append(el("h1", "", "Fermé"), el("p", "", "To-do indisponible — " + e.message));
       }
     </script>
   </body>

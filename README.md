@@ -9,4 +9,6 @@ Generic static viewer for a private daily to-do payload carried in the URL fragm
 - Checkboxes and manual additions are stored in browser `localStorage`.
 - Unfinished tasks from the immediately preceding day roll over automatically; completed tasks do not.
 
+Design: « Guichet du matin » (tasks as tickets to punch), since 2026-10-11.
+
 This viewer is intentionally standalone and has no analytics or external dependencies.
